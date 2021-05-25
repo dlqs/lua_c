@@ -1,0 +1,1 @@
+clang interpreter.c -I/usr/include/lua5.2 -llua5.2
