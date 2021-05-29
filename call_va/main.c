@@ -30,6 +30,9 @@ void call_va(lua_State *L, const char *func, const char *sig, ...) {
     case 'i':
       lua_pushinteger(L, va_arg(vl, int));
       break;
+    case 'b':
+      lua_pushboolean(L, va_arg(vl, int));
+      break;
     case 's':
       lua_pushstring(L, va_arg(vl, char *));
       break;
@@ -68,6 +71,11 @@ endargs:
       *va_arg(vl, int *) = n;
       break;
     }
+    case 'b': {
+      int n = lua_toboolean(L, nres);
+      *va_arg(vl, int *) = n;
+      break;
+    }
     case 's': {
       const char *s = lua_tostring(L, nres);
       if (s == NULL) {
@@ -84,15 +92,40 @@ endargs:
   va_end(vl);
 }
 
-
-
 int main() {
   lua_State *L = luaL_newstate();
-  if (luaL_loadfile(L, "addition.lua")) {
+  luaL_openlibs(L);
+  if (luaL_dofile(L, "script.lua")) {
       error(L, "Unable to load file");
   }
+
+  // basic data types
   int z;
-  call_va(L, "add", "ii>i", 1, 1, &z);
-  printf("%d\n", z);
+  call_va(L, "add", "ii>i", 3, 4, &z);
+  printf("add returns: %d\n", z);
+
+  double d;
+  call_va(L, "div", "ii>d", 1, 3, &d);
+  printf("div returns: %.3f\n", d);
+
+  char *s;
+  call_va(L, "say_hello", "s>s", "world", &s);
+  printf("say_hello returns: %s\n", s);
+
+  int x;
+  call_va(L, "xor", "bb>b", 1, 1, &x);
+  printf("true xor true returns: %d\n", x);
+
+  // multiple return values
+  int a = 4, b = 5;
+  call_va(L, "swap", "ii>ii", a, b, &a, &b);
+  printf("swapped: a=%d, b=%d\n", a, b);
+
+
+  // sleep using os.sleep
+  int t = 2;
+  call_va(L, "sleep", "i", t);
+  printf("slept for %d seconds\n", t);
+
   lua_close(L);
 }

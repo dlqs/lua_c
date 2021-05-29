@@ -1,6 +1,0 @@
-27.1
-clang interpreter.c -I/usr/include/lua5.4.3 -llua5.4.3
-27.2
-
-
-
