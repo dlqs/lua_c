@@ -22,3 +22,14 @@ function sleep(n)
   os.execute("sleep " .. tonumber(n))
 end
 
+function map(f, xs)
+  local ys = {}
+  for i, x in ipairs(xs) do
+    ys[i] = f(x)
+  end
+  return ys
+end
+
+function call(f, a)
+  return f(a)
+end

@@ -1,2 +1,2 @@
-clang main.c -Ilua5.4 -llua5.4
+clang main.c -Ilua5.4 -llua5.4 -lm
 ./a.out

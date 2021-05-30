@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 void error(lua_State *L, const char *fmt, ...) {
     va_list argp;
@@ -13,6 +14,12 @@ void error(lua_State *L, const char *fmt, ...) {
     va_end(argp);
     lua_close(L);
     exit(EXIT_FAILURE);
+}
+
+static int l_sin(lua_State *L) {
+  double d = luaL_checknumber(L, 1);
+  lua_pushnumber(L, sin(d));
+  return 1;
 }
 
 void call_va(lua_State *L, const char *func, const char *sig, ...) {
@@ -35,6 +42,9 @@ void call_va(lua_State *L, const char *func, const char *sig, ...) {
       break;
     case 's':
       lua_pushstring(L, va_arg(vl, char *));
+      break;
+    case 'f':
+      lua_pushcfunction(L, va_arg(vl, lua_CFunction));
       break;
     case '>':
       goto endargs;
@@ -121,11 +131,14 @@ int main() {
   call_va(L, "swap", "ii>ii", a, b, &a, &b);
   printf("swapped: a=%d, b=%d\n", a, b);
 
-
   // sleep using os.sleep
-  int t = 2;
+  int t = 1;
   call_va(L, "sleep", "i", t);
   printf("slept for %d seconds\n", t);
+
+  // call a C function in Lua
+  call_va(L, "call", "fd>d", l_sin, 1.0, &d);
+  printf("call returns: %.3f\n", d);
 
   lua_close(L);
 }
