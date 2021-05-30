@@ -1,0 +1,2 @@
+gcc array.c -Wall -fpic -shared -o array.so
+lua test.lua
