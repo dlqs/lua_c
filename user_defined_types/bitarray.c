@@ -1,4 +1,4 @@
-#include "array.h"
+#include "bitarray.h"
 
 typedef struct BitArray {
   int size;
@@ -84,7 +84,7 @@ static const struct luaL_Reg arraylib_m [] = {
 {NULL, NULL}
 };
 
-extern int luaopen_array(lua_State *L) {
+extern int luaopen_bitarray(lua_State *L) {
   luaL_newmetatable(L, "LuaBook.array");
   luaL_setfuncs(L, arraylib_m, 0);
   luaL_newlib(L, arraylib_f);

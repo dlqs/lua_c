@@ -1,2 +1,2 @@
-gcc array.c -Wall -fpic -shared -o array.so
+gcc bitarray.c -Wall -fpic -shared -o bitarray.so
 lua test.lua

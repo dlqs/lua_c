@@ -1,4 +1,4 @@
-array = require "array"
+array = require "bitarray"
 a = array.new(10)
 print(a)
 
