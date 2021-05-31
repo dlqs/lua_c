@@ -1,5 +1,5 @@
-#ifndef REPL_H
-#define REPL_H
+#ifndef INTERPRETER_H
+#define INTERPRETER_H
 
 #include "lua.h"
 #include "lualib.h"
@@ -8,6 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 
-void repl(lua_State *L);
+void interpreter();
 
-#endif // REPL_H
+#endif

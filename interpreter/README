@@ -1,0 +1,4 @@
+Evaluates Lua statements (not expressions!)
+
+gcc interpreter.c -llua5.4 -Wall
+./a.out
