@@ -37,7 +37,7 @@ static unsigned int *getparams(lua_State *L, unsigned int *mask) {
 static int setarray(lua_State *L) {
   unsigned int mask;
   unsigned int *entry = getparams(L, &mask);
-  luaL_checkany(L, 3);
+  luaL_argcheck(L, lua_isboolean(L, 3), 3, "value is not boolean"); // index
   if (lua_toboolean(L, 3)) {
     *entry |= mask;
   } else {
