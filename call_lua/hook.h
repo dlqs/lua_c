@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// From compiler.h
+// Took the variadic macros from compiler.h
+// https://github.com/frrouting/frr/blob/9dddf5fe699518f28e028541c9a57e8fde2402c4/lib/compiler.h#L143-L183
 #define _MACRO_VARIANT(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, N, ...) N
 
 #define _CONCAT2(a, b) a##b
@@ -50,12 +51,12 @@ extern int lua_hook_load(const char *script_name, lua_State *L);
 
 extern int lua_hook_call(lua_State *L);
 
-// Encoding functions
-
+// Encoder functions
 extern void lua_fromInteger(lua_State *L, const char *bindname, int a);
 
 extern void lua_fromDouble(lua_State *L, const char *bindname, double a);
 
+// Insert lua state as first arg
 #define ENCODE_ARGS_WITH_STATE(x) ENCODE_ARGS(L, x)
 
 #define ENCODE_ARGS(L, x) _Generic((x),     \
