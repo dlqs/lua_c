@@ -59,11 +59,31 @@ extern void lua_fromDouble(lua_State *L, const char *bindname, double a);
 // Insert lua state as first arg
 #define ENCODE_ARGS_WITH_STATE(x) ENCODE_ARGS(L, x)
 
+/**
+ * Map types to their respective encoder functions here.
+ * We use _Generic to dispatch based on type.
+ * The encoder functions bind the variable name to their values
+ *
+ * Do not put a default case; we *want* a compile error if an encoder function cannot be found.
+ *
+ **/
 #define ENCODE_ARGS(L, x) _Generic((x),     \
     int    : lua_fromInteger(L, #x, x),      \
     double : lua_fromDouble(L, #x, x)       \
   );
 
+/**
+ * This macro takes a script name and variables whose types have encoder functions mapped above
+ *
+ * The variables should be lvalues, not rvalues, or else we won't have a name to bind them to
+ *
+ * This macro has 3 parts:
+ * 1. Loading the script into Lua state
+ * 2. Encoding the arguments into Lua state (this is done by mapping ENCODE_ARGS over the var args)
+ * 3. Calling the Lua state
+ * (wip: decoding return values)
+ *
+ * */
 #define lua_hook(script_name, ...)                        \
   do {                                                    \
      lua_State *L = luaL_newstate();                      \

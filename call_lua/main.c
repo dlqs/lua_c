@@ -1,6 +1,13 @@
 #include "hook.h"
 
 int main() {
+
+  /**
+   * lua_hook takes a script, and arguments for which there are
+   * encoder functions, sets them as globals, then runs the script.
+   *
+   * decoder functions: wip
+   * */
   printf(" === script1.lua === \n");
   int a = 100;
   int b = 200;
