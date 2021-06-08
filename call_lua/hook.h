@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include "libpp/map-lists.h"
+#include "libpp/separators.h"
 
 // Took the variadic macros from compiler.h
 // https://github.com/frrouting/frr/blob/9dddf5fe699518f28e028541c9a57e8fde2402c4/lib/compiler.h#L143-L183
@@ -51,13 +54,27 @@ extern int lua_hook_load(const char *script_name, lua_State *L);
 
 extern int lua_hook_call(lua_State *L);
 
-// Encoder functions
-extern void lua_fromInteger(lua_State *L, const char *bindname, int a);
+// Encoder/decoder functions
+void lua_fromInteger(lua_State *L, const char *bindname, int a);
 
-extern void lua_fromDouble(lua_State *L, const char *bindname, double a);
+void lua_toInteger(lua_State *L, const char *bindname, int a);
 
-// Insert lua state as first arg
-#define ENCODE_ARGS_WITH_STATE(x) ENCODE_ARGS(L, x)
+void lua_fromIntegerPtr(lua_State *L, const char *bindname, int *a);
+
+void lua_toIntegerPtr(lua_State *L, const char *bindname, int* a);
+
+void lua_do_nothing(lua_State *L, const char *bindname);
+
+// User-defined struct
+typedef struct person {
+  char *name;
+  int age;
+} person;
+
+// Encoder/decoder functions for user-defined struct
+void lua_fromPersonPtr(lua_State *L, const char *bindname, person *p);
+
+void lua_toPersonPtr(lua_State *L, const char *bindname, person *p);
 
 /**
  * Map types to their respective encoder functions here.
@@ -67,10 +84,22 @@ extern void lua_fromDouble(lua_State *L, const char *bindname, double a);
  * Do not put a default case; we *want* a compile error if an encoder function cannot be found.
  *
  **/
-#define ENCODE_ARGS(L, x) _Generic((x),     \
-    int    : lua_fromInteger(L, #x, x),      \
-    double : lua_fromDouble(L, #x, x)       \
-  );
+#define ENCODE_ARGS_WITH_STATE(L, name, value) _Generic((value),     \
+    int     : lua_fromInteger,                                       \
+    int *   : lua_fromIntegerPtr,                                    \
+    person *: lua_fromPersonPtr                                      \
+  )(L, name, value)
+
+#define DECODE_ARGS_WITH_STATE(L, name, value) _Generic((value),     \
+    int     : lua_toInteger,                                         \
+    int *   : lua_toIntegerPtr,                                      \
+    person *: lua_toPersonPtr                                        \
+  )(L, name, value)
+
+// Insert lua state (L) as first argument
+#define ENCODE_ARGS(name, value) ENCODE_ARGS_WITH_STATE(L, name, value)
+
+#define DECODE_ARGS(name, value) DECODE_ARGS_WITH_STATE(L, name, value)
 
 /**
  * This macro takes a script name and variables whose types have encoder functions mapped above
@@ -81,17 +110,17 @@ extern void lua_fromDouble(lua_State *L, const char *bindname, double a);
  * 1. Loading the script into Lua state
  * 2. Encoding the arguments into Lua state (this is done by mapping ENCODE_ARGS over the var args)
  * 3. Calling the Lua state
- * (wip: decoding return values)
- *
  * */
-#define lua_hook(script_name, ...)                        \
-  do {                                                    \
-     lua_State *L = luaL_newstate();                      \
-     if (lua_hook_load(script_name, L) == 0) {            \
-       MACRO_REPEAT(ENCODE_ARGS_WITH_STATE, ##__VA_ARGS__) \
-       lua_hook_call(L);                                  \
-     }                                                    \
-     lua_close(L);                                        \
+#define lua_hook(script_name, ...)                                    \
+  do {                                                                \
+     lua_State *L = luaL_newstate();                                  \
+     if (lua_hook_load(script_name, L) == 0) {                        \
+       PP_MAP_LISTS( ENCODE_ARGS, PP_SEP_SEMICOLON, ##__VA_ARGS__);   \
+       if (lua_hook_call(L) == 0) {                                   \
+         PP_MAP_LISTS( DECODE_ARGS, PP_SEP_SEMICOLON, ##__VA_ARGS__); \
+       }                                                              \
+     }                                                                \
+     lua_close(L);                                                    \
   } while (0)
 
 #endif // HOOK_H

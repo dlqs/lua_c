@@ -1,7 +1,8 @@
-#include "hook.h"
-#include "../debug.h"
+#include <string.h>
 #include <lua.h>
 #include <lualib.h>
+#include "hook.h"
+#include "../debug.h"
 
 void error(lua_State *L, const char *fmt, ...) {
   va_list argp;
@@ -56,10 +57,10 @@ int lua_hook_load(const char *script_name, lua_State *L) {
 }
 
 /**
- * Encoders
+ * Encoders and decoders
  *
  * The difference between these and those in FRR is that these
- * must also do the working of placing themselves on the stack (or in globals)
+ * must also do the work of putting themselves in and out of Lua globals
  *
  * */
 void lua_fromInteger(lua_State *L, const char *bindname, int a) {
@@ -67,9 +68,42 @@ void lua_fromInteger(lua_State *L, const char *bindname, int a) {
   lua_setglobal(L, bindname);
 }
 
-void lua_fromDouble(lua_State *L, const char *bindname, double a) {
-  lua_pushnumber(L, a);
+void lua_toInteger(lua_State *L, const char *bindname, int a) {
+  // Do nothing
+}
+
+void lua_fromIntegerPtr(lua_State *L, const char *bindname, int *a) {
+  lua_pushinteger(L, *a);
   lua_setglobal(L, bindname);
+}
+
+void lua_toIntegerPtr(lua_State *L, const char *bindname, int *a) {
+  lua_getglobal(L, bindname);
+  int result, isnum;
+  result = (int)lua_tointegerx(L, -1, &isnum);
+  if (!isnum)
+    error(L, "'%s' should be a number\n", bindname);
+  *a = result;
+  lua_pop(L, 1);   /* remove result from the stack */
+}
+
+void lua_fromPersonPtr(lua_State *L, const char *bindname, person *p) {
+  lua_newtable(L);
+  lua_pushstring(L, p->name);
+  lua_setfield(L, -2, "name");
+  lua_pushinteger(L, p->age);
+  lua_setfield(L, -2, "age");
+  lua_setglobal(L, bindname);
+}
+
+void lua_toPersonPtr(lua_State *L, const char *bindname, person *p) {
+  lua_getglobal(L, bindname);
+  lua_getfield(L, -1, "name");
+  p->name = strdup(lua_tostring(L, -1)); // somehow this doesn't work if compiled with -std=c11
+  lua_pop(L, 1);
+  lua_getfield(L, -1, "age");
+  p->age = lua_tointeger(L, -1);
+  lua_pop(L, 1);
 }
 
 /**

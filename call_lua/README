@@ -1,2 +1,2 @@
-gcc -Ilua5.4 hook.c main.c
+make
 ./a.out
